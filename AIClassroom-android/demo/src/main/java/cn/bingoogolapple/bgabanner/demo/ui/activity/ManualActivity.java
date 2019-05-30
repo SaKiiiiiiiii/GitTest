@@ -17,6 +17,14 @@ import android.widget.Toast;
 import android.view.WindowManager;
 import android.view.*;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +55,7 @@ public class ManualActivity extends AppCompatActivity {
         ImageButton airButton = (ImageButton) findViewById(R.id.airButton);
         Button in = (Button)findViewById(R.id.increaseButton);
         Button de = (Button)findViewById(R.id.decreaseButton);
+        Button sb = (Button)findViewById(R.id.submitM);
         lightButton.setChecked(false);
         windowButton.setChecked(false);
 //        switchButton.isChecked();
@@ -160,12 +169,143 @@ public class ManualActivity extends AppCompatActivity {
             }
         });
 
+        //提交
+        sb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+                new Thread(postThread).start();
+
+
+            }
+        });
 
 
 
 
     }
+
+
+
+
+
+
+    private Thread postThread = new Thread() {
+        public void run() {
+            //在当前方法onClick中监听
+            TextView temperature = (TextView)findViewById(R.id.temperature);
+            SwitchButton lightButton = (SwitchButton) findViewById(R.id.light_button);
+            SwitchButton windowButton = (SwitchButton) findViewById(R.id.window_button);
+            ImageButton airButton = (ImageButton) findViewById(R.id.airButton);
+            String light;
+            String window;
+            String aircon;
+            int temp;
+
+
+            if(lightButton.isChecked())
+                light = "On";
+            else
+                light = "Off";
+
+            if(windowButton.isChecked())
+                window = "Open";
+            else
+                window = "Close";
+
+
+
+            if (temperature.getVisibility()==View.VISIBLE) {
+                aircon = "On";
+                temp = Integer.parseInt(temperature.getText().toString());
+//                    Toast.makeText(getApplicationContext(), "降温", Toast.LENGTH_SHORT).show();
+
+            }
+            else {
+                aircon = "Off";
+                temp = 0;
+            }
+
+
+            HttpURLConnection conn = null;
+            BufferedReader br = null;
+            String encoding = "UTF-8";
+            try {
+                URL url = new URL("http://10.0.2.2:8000/state/");
+                conn = (HttpURLConnection) url.openConnection();
+
+                conn.setConnectTimeout(500);
+                conn.setDoOutput(true);//设置允许输出
+                conn.setRequestMethod("POST");
+//                conn.setRequestProperty("User-Agent", "Fiddler");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Charset", encoding);
+
+                JSONObject ClientKey = new JSONObject();
+                ClientKey.put("light", light);
+                ClientKey.put("window", window);
+                ClientKey.put("aircon", aircon);
+                ClientKey.put("temp", temp);
+
+
+
+
+
+
+
+                /*封装Person数组*/
+                JSONObject params = new JSONObject();
+                params.put("Data", ClientKey);
+                /*把JSON数据转换成String类型使用输出流向服务器写*/
+                String content = String.valueOf(params);
+                System.out.println(content);
+
+                OutputStream os = conn.getOutputStream();
+                os.write(content.getBytes());
+                os.close();
+
+                /*服务器返回的响应码*/
+                int code = conn.getResponseCode();
+                if (code == 200) {
+                    System.out.println("数据提交成功");
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), encoding));
+                    String retData = null;
+                    String responseData = "";
+                    while ((retData = in.readLine()) != null) {
+                        responseData += retData;
+                    }
+//                    JSONObject jsonObject = new JSONObject(responseData);
+//                    JSONObject succObject = jsonObject.getJSONObject("regsucc");
+                    //System.out.println(result);
+//                    String success = succObject.getString("number");
+
+                    in.close();
+                } else {
+                    System.out.println("数据提交失败");
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d("haha", e.getMessage());
+            } finally {
+                if (conn != null) {
+                    conn.disconnect();
+                }
+                if (br != null) {
+                    try {
+                        br.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+
+                    }
+                }
+            }
+        }
+    };
+
+
+
+
 
 
 

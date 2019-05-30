@@ -1,13 +1,29 @@
 package cn.bingoogolapple.bgabanner.demo.ui.activity;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.suke.widget.SwitchButton;
+
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 
 import cn.bingoogolapple.bgabanner.demo.App;
 import cn.bingoogolapple.bgabanner.demo.R;
@@ -16,6 +32,8 @@ import cn.bingoogolapple.bgabanner.demo.engine.Engine;
 public class TeachActivity extends AppCompatActivity {
     private Engine mEngine;
     private Boolean flag = false;
+    private TextView mTvMsg;
+
     private static final String TAG = "TeachActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,14 +86,128 @@ public class TeachActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Button rest = (Button)findViewById(R.id.rest);
                 if(!flag) {
+
                     flag = true;
                     rest.setText("继续上课");
                 } else {
+
+
+
+
                     flag = false;
                     rest.setText("下课休息");
                 }
             }
         });
+        initView();
 
+    }
+
+
+
+
+
+
+    private void initView(){
+        mTvMsg = (TextView) findViewById(R.id.status);
+        new Thread(postThread).start();
+
+    }
+
+
+    private Thread postThread = new Thread(){
+        public void run() {
+//            Toast.makeText(getApplicationContext(), "开启线程", Toast.LENGTH_SHORT).show();
+            HttpURLConnection conn=null;
+            BufferedReader br=null;
+            String encoding = "UTF-8";
+            try {
+                URL url=new URL("http://10.0.2.2:8000/post/");
+                conn= (HttpURLConnection) url.openConnection();
+
+                conn.setConnectTimeout(5000);
+                conn.setDoOutput(true);//设置允许输出
+                conn.setRequestMethod("POST");
+//                conn.setRequestProperty("User-Agent", "Fiddler");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Charset", encoding);
+
+                JSONObject ClientKey = new JSONObject();
+                ClientKey.put("a", "1");
+                ClientKey.put("b", "2");
+
+                setContent("123456");
+                /*封装Person数组*/
+                JSONObject params = new JSONObject();
+                params.put("Data", ClientKey);
+                /*把JSON数据转换成String类型使用输出流向服务器写*/
+                String content = String.valueOf(params);
+
+
+                OutputStream os = conn.getOutputStream();
+                os.write(content.getBytes());
+                os.close();
+                setContent(content);
+                /*服务器返回的响应码*/
+                int code = conn.getResponseCode();
+                if(code == 200)
+                {
+                    setContent("数据提交成功");
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), encoding));
+                    String retData = null;
+                    String responseData = "";
+                    while((retData = in.readLine()) != null)
+                    {
+                        responseData += retData;
+                    }
+//                    JSONObject jsonObject = new JSONObject(responseData);
+//                    JSONObject succObject = jsonObject.getJSONObject("regsucc");
+                    //System.out.println(result);
+//                    String success = succObject.getString("number");
+                    setContent(responseData);
+                    in.close();
+                }
+                else
+                {
+                    System.out.println("数据提交失败");
+                }
+
+//                InputStream in=conn.getInputStream();
+//                br=new BufferedReader(new InputStreamReader(in));
+//
+//                StringBuilder sb=new StringBuilder();
+//                String s;
+//                while((s = br.readLine())!=null){
+//                    sb.append(s);
+//                }
+//                setContent(sb.toString());
+//                Log.d("123","---"+sb.toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d("haha",e.getMessage());
+            }finally {
+                if (conn!=null){
+                    conn.disconnect();
+                }
+                if (br!=null){
+                    try {
+                        br.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+
+                    }
+                }
+            }
+        }
+    };
+
+    public void setContent(final String s) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mTvMsg.setText(s);
+                Log.d("haha",s);
+            }
+        });
     }
 }

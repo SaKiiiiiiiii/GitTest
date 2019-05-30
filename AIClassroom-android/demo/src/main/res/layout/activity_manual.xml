@@ -165,7 +165,24 @@
 
 
     </GridLayout>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="30dp"
+        android:layout_weight="1">
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
 
+            android:layout_weight="1"
+
+            android:id="@+id/submitM"
+
+            android:text="提交"
+            android:textSize="30sp"/>
+
+    </LinearLayout>
 
 
 

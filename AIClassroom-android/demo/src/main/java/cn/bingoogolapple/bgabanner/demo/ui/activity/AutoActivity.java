@@ -19,6 +19,14 @@ import android.widget.Toast;
 import android.view.WindowManager;
 import android.view.*;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -276,18 +284,21 @@ public class AutoActivity extends AppCompatActivity {
             public void onClick(View view) {
 
 
-                TextView light_text = (TextView) findViewById(R.id.light_text);
-                TextView temp_text = (TextView) findViewById(R.id.temp_text);
-                String light = light_text.getText().toString();
-                String temp = temp_text.getText().toString();
-                System.out.println("光照强度设定：" + light);
-                System.out.println("室内温度设定：" + temp);
 
 
-                Boolean[] stu = returnStu();
-                System.out.println("学生分布情况：");
-                for(int i=0;i<9;i++)
-                    System.out.println("第" + (i+1) + "片位置是否有人："+stu[i]);
+
+
+                new Thread(postThread).start();
+
+
+
+
+
+
+
+
+
+
 
                 Toast.makeText(getApplicationContext(), "已提交，具体见控制台", Toast.LENGTH_SHORT).show();
             }
@@ -305,12 +316,106 @@ public class AutoActivity extends AppCompatActivity {
             }
         });
 
-
-
-
-
-
     }
+
+
+
+
+    private Thread postThread = new Thread() {
+        public void run() {
+            TextView light_text = (TextView) findViewById(R.id.light_text);
+            TextView temp_text = (TextView) findViewById(R.id.temp_text);
+            String light = light_text.getText().toString();
+            String temp = temp_text.getText().toString();
+
+
+            HttpURLConnection conn = null;
+            BufferedReader br = null;
+            String encoding = "UTF-8";
+            try {
+                URL url = new URL("http://10.0.2.2:8000/state/");
+                conn = (HttpURLConnection) url.openConnection();
+
+                conn.setConnectTimeout(500);
+                conn.setDoOutput(true);//设置允许输出
+                conn.setRequestMethod("POST");
+//                conn.setRequestProperty("User-Agent", "Fiddler");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Charset", encoding);
+
+                JSONObject ClientKey = new JSONObject();
+                ClientKey.put("light", light);
+                ClientKey.put("temp", temp);
+                System.out.println("光照强度设定：" + light);
+                System.out.println("室内温度设定：" + temp);
+
+
+                Boolean[] stu = returnStu();
+                System.out.println("学生分布情况：");
+                for (int i = 0; i < 9; i++) {
+                    String name = "student" + (i + 1);
+                    ClientKey.put(name, stu[i]);
+                    System.out.println("第" + (i + 1) + "片位置是否有人：" + stu[i]);
+                }
+
+                /*封装Person数组*/
+                JSONObject params = new JSONObject();
+                params.put("Data", ClientKey);
+                /*把JSON数据转换成String类型使用输出流向服务器写*/
+                String content = String.valueOf(params);
+                System.out.println(content);
+
+                OutputStream os = conn.getOutputStream();
+                os.write(content.getBytes());
+                os.close();
+
+                /*服务器返回的响应码*/
+                int code = conn.getResponseCode();
+                if (code == 200) {
+                    System.out.println("数据提交成功");
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), encoding));
+                    String retData = null;
+                    String responseData = "";
+                    while ((retData = in.readLine()) != null) {
+                        responseData += retData;
+                    }
+//                    JSONObject jsonObject = new JSONObject(responseData);
+//                    JSONObject succObject = jsonObject.getJSONObject("regsucc");
+                    //System.out.println(result);
+//                    String success = succObject.getString("number");
+
+                    in.close();
+                } else {
+                    System.out.println("数据提交失败");
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d("haha", e.getMessage());
+            } finally {
+                if (conn != null) {
+                    conn.disconnect();
+                }
+                if (br != null) {
+                    try {
+                        br.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+
+                    }
+                }
+            }
+        }
+    };
+
+
+
+
+
+
+
+
+
 
     public Boolean[] returnStu(){
         Boolean[] stus = new Boolean[9];
