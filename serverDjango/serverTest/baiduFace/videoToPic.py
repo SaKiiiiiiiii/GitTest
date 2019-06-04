@@ -63,7 +63,7 @@ def process_video(i_video, o_video, num):
 
 def videoToPic():
     #视频--图片
-    path = "/Users/tony/学习/Android/serverDjango/serverTest/baiduFace/java.mp4"
+    path = "/Users/tony/学习/Android/serverDjango/serverTest/baiduFace/software.mp4"
     args = parse_args(path)
     if not os.path.exists(args.output):
         os.makedirs(args.output)

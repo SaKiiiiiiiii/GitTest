@@ -24,7 +24,7 @@ def post(request):
 
         print(array_of_data)
         i = 0
-        strs = "共有5位同学\n"
+        strs = "共有3位同学\n"
         for data in array_of_data:
 
             i = i + 1

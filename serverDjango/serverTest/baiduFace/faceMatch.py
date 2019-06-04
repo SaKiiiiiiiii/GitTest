@@ -49,6 +49,8 @@ class BaiduFaceMatch:
             return '虞胜杰'
         if username == 'wlx':
             return '王力鑫'
+        if username == 'ljr':
+            return '娄嘉瑞'
 
     def student_id(self, username):
         if username == 'zxy':
@@ -62,11 +64,13 @@ class BaiduFaceMatch:
         if username == 'zs':
             return '201526810504'
         if username == 'tn':
-            return '2111812123'
+            return '2111812079'
         if username == 'ysj':
             return '2111812155'
         if username == 'wlx':
             return '2111812164'
+        if username == 'ljr':
+            return '2111812169'
 
     def match_face(self):
 
@@ -109,12 +113,7 @@ class BaiduFaceMatch:
                 for i in range(len(json_result['result']['face_list'][n]['user_list'])):
                     if self.score_judge(json_result['result']['face_list'][n]['user_list'][i]['score']):
                         print(self.name_judge(json_result['result']['face_list'][n]['user_list'][i]['user_id']),"到了")
-                        # arrived_student = self.name_judge(json_result['result']['face_list'][n]['user_list'][i]['user_id']) + self.student_id(json_result['result']['face_list'][n]['user_list'][i]['user_id'])
-                        # arrived_student.append((self.name_judge(
-                        #     json_result['result']['face_list'][n]['user_list'][i]['user_id']), self.student_id(
-                        #     json_result['result']['face_list'][n]['user_list'][i]['user_id'])))
-
-                        arrived_student.append((self.name_judge(json_result['result']['face_list'][n]['user_list'][i]['user_id']) + ',' + self.student_id(json_result['result']['face_list'][n]['user_list'][i]['user_id'])))
+                        arrived_student.append((self.name_judge(json_result['result']['face_list'][n]['user_list'][i]['user_id'])+','+self.student_id(json_result['result']['face_list'][n]['user_list'][i]['user_id'])))
 
         return arrived_student
 
@@ -128,7 +127,7 @@ class BaiduFaceMatch:
 
 
 if __name__ == '__main__':
-    img_src = input('图片名')
+    img_src =input('图片名')
     baiduDetect = BaiduFaceMatch(img_src)
     arrived_student = baiduDetect.match_face()
     print(arrived_student)
