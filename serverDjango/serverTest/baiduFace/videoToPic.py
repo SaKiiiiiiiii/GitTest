@@ -9,7 +9,7 @@ import  os
 from tkinter import *
 from tkinter import filedialog
 import tkinter as tk
-sys.path.append(os.getcwd() + '/baiduFace')
+# sys.path.append(os.getcwd() + '/baiduFace')
 from .faceDectectDemo import BaiduPicIndentify
 from .faceMatch import BaiduFaceMatch
 #import re
@@ -103,7 +103,7 @@ def read_directory(directory_name):
 
 def process_fig():
 
-    faceMatch = BaiduFaceMatch('dd.jpg')
+    faceMatch = BaiduFaceMatch('p1.jpg')
     arrived_student = faceMatch.match_face()
     print(arrived_student)
     return arrived_student

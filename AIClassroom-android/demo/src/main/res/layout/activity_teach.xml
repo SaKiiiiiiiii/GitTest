@@ -113,7 +113,7 @@
 
             android:id="@+id/check"
 
-            android:text="点到"
+            android:text="智能监控"
             android:textSize="30sp"/>
 
     </LinearLayout>

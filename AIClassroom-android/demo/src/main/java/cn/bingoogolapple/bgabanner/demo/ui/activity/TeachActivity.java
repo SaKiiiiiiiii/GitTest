@@ -59,6 +59,7 @@ public class TeachActivity extends AppCompatActivity {
                 //TODO do your job
                 if(isChecked) {
                     Toast.makeText(getApplicationContext(), "开启摄像头", Toast.LENGTH_SHORT).show();
+                    new Thread(checkThread).start();
                 }
                 else {
                     Toast.makeText(getApplicationContext(), "关闭摄像头", Toast.LENGTH_SHORT).show();
@@ -104,7 +105,7 @@ public class TeachActivity extends AppCompatActivity {
         check.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new Thread(checkThread).start();
+                new Thread(postThread).start();
             }
         });
 
@@ -118,7 +119,7 @@ public class TeachActivity extends AppCompatActivity {
 
     private void initView(){
         mTvMsg = (TextView) findViewById(R.id.status);
-        new Thread(postThread).start();
+
 
     }
 
