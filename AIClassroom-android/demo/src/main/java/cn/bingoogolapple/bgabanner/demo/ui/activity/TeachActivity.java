@@ -3,6 +3,7 @@ package cn.bingoogolapple.bgabanner.demo.ui.activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -45,7 +46,7 @@ public class TeachActivity extends AppCompatActivity {
         mEngine = App.getInstance().getEngine();
 
 
-
+        initView();
 
         SwitchButton cameraButton = (SwitchButton) findViewById(R.id.camera_button);
         SwitchButton projectorButton = (SwitchButton) findViewById(R.id.projector_button);
@@ -99,7 +100,14 @@ public class TeachActivity extends AppCompatActivity {
                 }
             }
         });
-        initView();
+        Button check = (Button)findViewById(R.id.check);
+        check.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(checkThread).start();
+            }
+        });
+
 
     }
 
@@ -147,18 +155,20 @@ public class TeachActivity extends AppCompatActivity {
                 OutputStream os = conn.getOutputStream();
                 os.write(content.getBytes());
                 os.close();
-                setContent(content);
+                setContent("正在检测人脸");
+                SystemClock.sleep(3000);
+                setContent("将视频分割成帧\n共提取18帧\n正在识别请稍等……");
                 /*服务器返回的响应码*/
                 int code = conn.getResponseCode();
                 if(code == 200)
                 {
-                    setContent("数据提交成功");
+//                    setContent("数据提交成功");
                     BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), encoding));
                     String retData = null;
                     String responseData = "";
                     while((retData = in.readLine()) != null)
                     {
-                        responseData += retData;
+                        responseData += retData + "\n\n";
                     }
 //                    JSONObject jsonObject = new JSONObject(responseData);
 //                    JSONObject succObject = jsonObject.getJSONObject("regsucc");
@@ -200,6 +210,112 @@ public class TeachActivity extends AppCompatActivity {
             }
         }
     };
+
+
+
+
+
+    private Thread checkThread = new Thread(){
+        public void run() {
+//            Toast.makeText(getApplicationContext(), "开启线程", Toast.LENGTH_SHORT).show();
+            HttpURLConnection conn=null;
+            BufferedReader br=null;
+            String encoding = "UTF-8";
+            try {
+                URL url=new URL("http://10.0.2.2:8000/check/");
+                conn= (HttpURLConnection) url.openConnection();
+
+                conn.setConnectTimeout(5000);
+                conn.setDoOutput(true);//设置允许输出
+                conn.setRequestMethod("POST");
+//                conn.setRequestProperty("User-Agent", "Fiddler");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Charset", encoding);
+
+                JSONObject ClientKey = new JSONObject();
+                ClientKey.put("a", "1");
+                ClientKey.put("b", "2");
+
+                setContent("123456");
+                /*封装Person数组*/
+                JSONObject params = new JSONObject();
+                params.put("Data", ClientKey);
+                /*把JSON数据转换成String类型使用输出流向服务器写*/
+                String content = String.valueOf(params);
+
+
+                OutputStream os = conn.getOutputStream();
+                os.write(content.getBytes());
+                os.close();
+                setContent("正在点到");
+                SystemClock.sleep(3000);
+                setContent("正在识别人脸\n请稍等……");
+                /*服务器返回的响应码*/
+                int code = conn.getResponseCode();
+                if(code == 200)
+                {
+//                    setContent("数据提交成功");
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), encoding));
+                    String retData = null;
+                    String responseData = "";
+                    while((retData = in.readLine()) != null)
+                    {
+                        responseData += retData + '\n';
+                    }
+//                    JSONObject jsonObject = new JSONObject(responseData);
+//                    JSONObject succObject = jsonObject.getJSONObject("regsucc");
+                    //System.out.println(result);
+//                    String success = succObject.getString("number");
+                    setContent(responseData);
+                    in.close();
+                }
+                else
+                {
+                    System.out.println("数据提交失败");
+                }
+
+//                InputStream in=conn.getInputStream();
+//                br=new BufferedReader(new InputStreamReader(in));
+//
+//                StringBuilder sb=new StringBuilder();
+//                String s;
+//                while((s = br.readLine())!=null){
+//                    sb.append(s);
+//                }
+//                setContent(sb.toString());
+//                Log.d("123","---"+sb.toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d("haha",e.getMessage());
+            }finally {
+                if (conn!=null){
+                    conn.disconnect();
+                }
+                if (br!=null){
+                    try {
+                        br.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+
+                    }
+                }
+            }
+        }
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public void setContent(final String s) {
         runOnUiThread(new Runnable() {
